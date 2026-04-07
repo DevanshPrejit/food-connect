@@ -120,7 +120,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      accept_listing: { Args: { p_listing_id: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
