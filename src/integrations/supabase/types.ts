@@ -14,7 +14,107 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      acceptances: {
+        Row: {
+          accepted_at: string
+          id: string
+          listing_id: string
+          ngo_id: string
+          status: string
+        }
+        Insert: {
+          accepted_at?: string
+          id?: string
+          listing_id: string
+          ngo_id: string
+          status?: string
+        }
+        Update: {
+          accepted_at?: string
+          id?: string
+          listing_id?: string
+          ngo_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "acceptances_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listings: {
+        Row: {
+          created_at: string
+          donor_id: string
+          expiry_time: string
+          food_name: string
+          food_type: string
+          id: string
+          image_url: string | null
+          pickup_location: string
+          quantity: number
+          status: string
+          urgency: string
+        }
+        Insert: {
+          created_at?: string
+          donor_id: string
+          expiry_time: string
+          food_name: string
+          food_type: string
+          id?: string
+          image_url?: string | null
+          pickup_location: string
+          quantity?: number
+          status?: string
+          urgency?: string
+        }
+        Update: {
+          created_at?: string
+          donor_id?: string
+          expiry_time?: string
+          food_name?: string
+          food_type?: string
+          id?: string
+          image_url?: string | null
+          pickup_location?: string
+          quantity?: number
+          status?: string
+          urgency?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          location: string
+          name: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          location?: string
+          name?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          location?: string
+          name?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
