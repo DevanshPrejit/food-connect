@@ -118,8 +118,9 @@ export default function DonorDashboard() {
     );
   };
 
-  const totalMeals = listings.reduce((s, l) => s + l.quantity, 0);
-  const completedDonations = listings.filter((l) => l.status === "accepted" || l.status === "picked_up").length;
+  const completedListings = listings.filter((l) => l.status === "accepted" || l.status === "picked_up");
+  const totalMeals = completedListings.reduce((s, l) => s + l.quantity, 0);
+  const completedDonations = completedListings.length;
 
   if (loading) return null;
 
