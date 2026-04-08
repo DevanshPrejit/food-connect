@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
-import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from "react-leaflet";
 import { supabase } from "@/integrations/supabase/client";
+import { geocode } from "@/lib/geocode";
 import "leaflet/dist/leaflet.css";
 
 interface MapListing {
@@ -11,15 +12,8 @@ interface MapListing {
   pickup_location: string;
 }
 
-// Generate deterministic pseudo-random coords from a string (for demo purposes)
-function locationToCoords(location: string, baseLat: number, baseLng: number): [number, number] {
-  let hash = 0;
-  for (let i = 0; i < location.length; i++) {
-    hash = location.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const lat = baseLat + ((hash % 100) / 1000) - 0.05;
-  const lng = baseLng + (((hash >> 8) % 100) / 1000) - 0.05;
-  return [lat, lng];
+interface MarkerData extends MapListing {
+  coords: [number, number];
 }
 
 const urgencyColors: Record<string, string> = {
@@ -28,28 +22,39 @@ const urgencyColors: Record<string, string> = {
   safe: "#22c55e",
 };
 
+function RecenterMap({ center }: { center: [number, number] }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, 13);
+  }, [center, map]);
+  return null;
+}
+
 export default function FoodSurplusMap() {
-  const [listings, setListings] = useState<MapListing[]>([]);
+  const [markers, setMarkers] = useState<MarkerData[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetch = async () => {
+    const fetchAndGeocode = async () => {
       const { data } = await supabase
         .from("listings")
         .select("id, food_name, quantity, urgency, pickup_location")
         .eq("status", "pending");
-      if (data) setListings(data);
+      if (!data || data.length === 0) {
+        setMarkers([]);
+        setLoading(false);
+        return;
+      }
+      const results: MarkerData[] = [];
+      for (const l of data) {
+        const coords = await geocode(l.pickup_location);
+        if (coords) results.push({ ...l, coords });
+      }
+      setMarkers(results);
+      setLoading(false);
     };
-    fetch();
+    fetchAndGeocode();
   }, []);
-
-  const markers = useMemo(
-    () =>
-      listings.map((l) => ({
-        ...l,
-        coords: locationToCoords(l.pickup_location, 13.35, 74.79), // Default center near Manipal/Udupi
-      })),
-    [listings]
-  );
 
   const center: [number, number] = markers.length > 0
     ? [
@@ -74,6 +79,7 @@ export default function FoodSurplusMap() {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+        {markers.length > 0 && <RecenterMap center={center} />}
         {markers.map((m) => (
           <CircleMarker
             key={m.id}
@@ -98,7 +104,7 @@ export default function FoodSurplusMap() {
           </CircleMarker>
         ))}
       </MapContainer>
-      {listings.length === 0 && (
+      {!loading && markers.length === 0 && (
         <p className="text-center text-xs text-muted-foreground py-3">No surplus food right now</p>
       )}
     </div>

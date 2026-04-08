@@ -1,9 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
+import { geocode } from "@/lib/geocode";
 import "leaflet/dist/leaflet.css";
 
-// Fix default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
@@ -36,15 +36,31 @@ function FitBounds({ positions }: { positions: [number, number][] }) {
 }
 
 interface Props {
-  donorPosition: [number, number];
-  ngoPosition: [number, number];
+  donorLocation: string;
+  ngoLocation: string;
 }
 
-export default function PickupMap({ donorPosition, ngoPosition }: Props) {
+export default function PickupMap({ donorLocation, ngoLocation }: Props) {
+  const [donorPos, setDonorPos] = useState<[number, number] | null>(null);
+  const [ngoPos, setNgoPos] = useState<[number, number] | null>(null);
+
+  useEffect(() => {
+    geocode(donorLocation).then(setDonorPos);
+    geocode(ngoLocation).then(setNgoPos);
+  }, [donorLocation, ngoLocation]);
+
+  if (!donorPos || !ngoPos) {
+    return (
+      <div className="rounded-xl border bg-card p-8 text-center text-sm text-muted-foreground">
+        Loading map...
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-xl overflow-hidden border shadow-sm">
       <MapContainer
-        center={donorPosition}
+        center={donorPos}
         zoom={13}
         style={{ height: "300px", width: "100%" }}
         scrollWheelZoom={false}
@@ -53,17 +69,17 @@ export default function PickupMap({ donorPosition, ngoPosition }: Props) {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <Marker position={donorPosition} icon={donorIcon} />
-        <Marker position={ngoPosition} icon={ngoIcon} />
-        <Polyline positions={[donorPosition, ngoPosition]} color="hsl(142, 72%, 29%)" dashArray="8" />
-        <FitBounds positions={[donorPosition, ngoPosition]} />
+        <Marker position={donorPos} icon={donorIcon} />
+        <Marker position={ngoPos} icon={ngoIcon} />
+        <Polyline positions={[donorPos, ngoPos]} color="hsl(142, 72%, 29%)" dashArray="8" />
+        <FitBounds positions={[donorPos, ngoPos]} />
       </MapContainer>
       <div className="flex items-center justify-between bg-card p-3 text-sm">
         <span className="flex items-center gap-2">
           <span className="h-3 w-3 rounded-full bg-primary" /> Donor
           <span className="h-3 w-3 rounded-full bg-secondary ml-3" /> NGO
         </span>
-        <span className="font-medium text-muted-foreground">📍 ~15 mins away</span>
+        <span className="font-medium text-muted-foreground">📍 Pickup route</span>
       </div>
     </div>
   );
