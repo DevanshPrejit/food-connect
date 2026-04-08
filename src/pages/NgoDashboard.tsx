@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth-context";
 import Navbar from "@/components/Navbar";
 import UrgencyBadge from "@/components/UrgencyBadge";
 import ImpactStats from "@/components/ImpactStats";
+import FoodSurplusMap from "@/components/FoodSurplusMap";
 import PickupMap from "@/components/PickupMap";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -47,6 +48,7 @@ export default function NgoDashboard() {
   const [filter, setFilter] = useState<"all" | "urgent" | "medium" | "safe">("all");
   const [acceptedListing, setAcceptedListing] = useState<Listing | null>(null);
   const [accepting, setAccepting] = useState<string | null>(null);
+  const [impactRefreshKey, setImpactRefreshKey] = useState(0);
 
   useEffect(() => {
     if (!loading && (!user || profile?.role !== "ngo")) {
@@ -106,6 +108,7 @@ export default function NgoDashboard() {
       setListings((prev) => prev.filter((l) => l.id !== listing.id));
       setAcceptedListing(listing);
       fetchAcceptances();
+      setImpactRefreshKey((k) => k + 1);
     }
     setAccepting(null);
   };
@@ -155,6 +158,8 @@ export default function NgoDashboard() {
           </TabsList>
 
           <TabsContent value="available" className="space-y-8">
+            {/* Food Surplus Map */}
+            <FoodSurplusMap />
             {/* Recommended */}
             {recommended.length > 0 && (
               <div>
@@ -230,7 +235,7 @@ export default function NgoDashboard() {
           </TabsContent>
 
           <TabsContent value="impact">
-            <ImpactStats />
+            <ImpactStats refreshKey={impactRefreshKey} />
           </TabsContent>
         </Tabs>
       </div>
