@@ -34,11 +34,6 @@ interface Acceptance {
   listings?: Listing;
 }
 
-// Mock coordinates for demo
-const mockCoordinates: Record<string, [number, number]> = {
-  default_donor: [19.076, 72.8777],
-  default_ngo: [19.082, 72.8907],
-};
 
 export default function NgoDashboard() {
   const { user, profile, loading } = useAuth();
@@ -143,8 +138,8 @@ export default function NgoDashboard() {
               <MapPin className="h-5 w-5 text-secondary" /> Pickup Tracking
             </h2>
             <PickupMap
-              donorPosition={mockCoordinates.default_donor}
-              ngoPosition={mockCoordinates.default_ngo}
+              donorLocation={acceptedListing.pickup_location}
+              ngoLocation={profile?.location || "Udupi"}
             />
             <Button variant="outline" onClick={() => setAcceptedListing(null)}>Dismiss</Button>
           </div>
