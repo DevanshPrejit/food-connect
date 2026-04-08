@@ -14,7 +14,8 @@ export default function ImpactStats({ refreshKey = 0 }: ImpactStatsProps) {
     const fetchStats = async () => {
       const { data: listings } = await supabase.from("listings").select("quantity, status");
       if (listings) {
-        const totalMeals = listings.reduce((sum, l) => sum + l.quantity, 0);
+        const savedListings = listings.filter((l) => l.status === "accepted" || l.status === "picked_up");
+        const totalMeals = savedListings.reduce((sum, l) => sum + l.quantity, 0);
         const active = listings.filter((l) => l.status === "pending").length;
         setStats({ meals: totalMeals, active, co2: Math.round(totalMeals * 2.5) });
       }
