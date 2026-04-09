@@ -73,7 +73,7 @@ export default function Navbar() {
                 size="sm"
                 onClick={handleSignOut}
                 className={`transition-colors duration-300 ${
-                  isTransparent ? "border-white/25 text-white hover:bg-white/10" : ""
+                  isTransparent ? "bg-transparent border-white/25 text-white hover:bg-white/10" : ""
                 }`}
               >
                 <LogOut className="h-4 w-4 mr-1" /> Sign out

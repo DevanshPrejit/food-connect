@@ -77,10 +77,10 @@ export default function LandingPage() {
             style={{ y: textY, opacity: textOpacity, scale: textScale }}
           >
             {/* Large cinematic typography */}
-            <h1 className="hero-text-shadow font-bold uppercase tracking-tight text-white leading-[0.9] select-none">
-              <span className="block text-[clamp(2.5rem,10vw,8rem)]">Food.</span>
-              <span className="block text-[clamp(2.5rem,10vw,8rem)] mt-1 text-primary drop-shadow-lg">Waste.</span>
-              <span className="block text-[clamp(2.5rem,10vw,8rem)] mt-1">Community.</span>
+            <h1 className="hero-text-shadow font-bold tracking-tight text-white leading-[0.9] select-none">
+              <span className="block text-[clamp(2.5rem,10vw,8rem)]">Share.</span>
+              <span className="block text-[clamp(2.5rem,10vw,8rem)] mt-1 text-primary drop-shadow-lg">Nourish.</span>
+              <span className="block text-[clamp(2.5rem,10vw,8rem)] mt-1">Sustain.</span>
             </h1>
 
             <p className="mt-6 max-w-lg text-lg sm:text-xl text-white/80 hero-text-shadow font-medium">

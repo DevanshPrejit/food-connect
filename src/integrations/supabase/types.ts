@@ -93,6 +93,7 @@ export type Database = {
           created_at: string
           id: string
           location: string
+          mobile_number: string
           name: string
           role: string
           user_id: string
@@ -101,6 +102,7 @@ export type Database = {
           created_at?: string
           id?: string
           location?: string
+          mobile_number?: string
           name?: string
           role: string
           user_id: string
@@ -109,6 +111,7 @@ export type Database = {
           created_at?: string
           id?: string
           location?: string
+          mobile_number?: string
           name?: string
           role?: string
           user_id?: string

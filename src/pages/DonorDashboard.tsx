@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { computeUrgency } from "@/lib/urgency";
 import { reverseGeocode } from "@/lib/reverseGeocode";
-import { LocateFixed, Plus, Package } from "lucide-react";
+import { LocateFixed, Plus, Package, Phone } from "lucide-react";
 
 interface Listing {
   id: string;
@@ -175,11 +175,20 @@ export default function DonorDashboard() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="container mx-auto px-4 pt-16 py-8 max-w-4xl">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Donor Dashboard</h1>
             <p className="text-muted-foreground">Welcome, {profile?.name}</p>
+            {profile?.mobile_number ? (
+              <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
+                <Phone className="h-3 w-3" /> {profile.mobile_number}
+              </p>
+            ) : (
+              <p className="text-sm text-amber-600 dark:text-amber-400 mt-0.5">
+                ⚠️ Add your mobile number so NGOs can reach you
+              </p>
+            )}
           </div>
           <Button onClick={() => setShowForm(!showForm)} className="gap-2">
             <Plus className="h-4 w-4" /> Add Food Listing
