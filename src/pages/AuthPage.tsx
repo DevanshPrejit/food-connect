@@ -42,16 +42,8 @@ export default function AuthPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         
-        // Fetch profile to redirect
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("role")
-            .eq("user_id", user.id)
-            .single();
-          navigate(profile?.role === "ngo" ? "/ngo" : "/donor");
-        }
+        toast.success("Welcome back!");
+        // Let auth context handle profile loading and routing
       }
     } catch (err: any) {
       toast.error(err.message);

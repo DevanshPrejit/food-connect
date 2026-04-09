@@ -17,7 +17,7 @@ export default function Navbar() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-2 text-xl font-bold text-primary">
           <Leaf className="h-6 w-6" />
-          ZeroWaste Connect
+          ResQMeal
         </Link>
 
         <div className="flex items-center gap-3">

@@ -44,10 +44,12 @@ export default function DonorDashboard() {
   const [locating, setLocating] = useState(false);
 
   useEffect(() => {
-    if (!loading && (!user || profile?.role !== "donor")) {
+    if (!loading && user && profile?.role === "donor") {
+      // User is authenticated and has correct role - stay on dashboard
+    } else if (!loading && (!user || profile?.role !== "donor")) {
       navigate("/auth");
     }
-  }, [user, profile, loading]);
+  }, [user, profile, loading, navigate]);
 
   useEffect(() => {
     if (user) fetchListings();
@@ -170,7 +172,7 @@ export default function DonorDashboard() {
   const totalMeals = completedListings.reduce((s, l) => s + l.quantity, 0);
   const completedDonations = completedListings.length;
 
-  if (loading) return null;
+  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
 
   return (
     <div className="min-h-screen bg-background">

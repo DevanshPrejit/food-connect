@@ -46,10 +46,12 @@ export default function NgoDashboard() {
   const [impactRefreshKey, setImpactRefreshKey] = useState(0);
 
   useEffect(() => {
-    if (!loading && (!user || profile?.role !== "ngo")) {
+    if (!loading && user && profile?.role === "ngo") {
+      // User is authenticated and has correct role - stay on dashboard
+    } else if (!loading && (!user || profile?.role !== "ngo")) {
       navigate("/auth");
     }
-  }, [user, profile, loading]);
+  }, [user, profile, loading, navigate]);
 
   useEffect(() => {
     if (user) {
@@ -120,7 +122,7 @@ export default function NgoDashboard() {
     })
     .slice(0, 3);
 
-  if (loading) return null;
+  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
 
   return (
     <div className="min-h-screen bg-background">
