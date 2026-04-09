@@ -39,12 +39,12 @@ export default function Navbar() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link
           to="/"
-          className={`flex items-center gap-2 text-xl font-bold transition-colors duration-300 ${
-            isTransparent ? "text-white" : "text-primary"
+          className={`flex items-center gap-2 text-2xl sm:text-3xl font-extrabold tracking-tight transition-colors duration-300 ${
+            isTransparent ? "text-white hero-text-shadow drop-shadow-md" : "text-primary"
           }`}
         >
-          <Leaf className="h-6 w-6" />
-          ZeroWaste Connect
+          <Leaf className="h-7 w-7 sm:h-8 sm:w-8" />
+          ResQMeal
         </Link>
 
         <div className="flex items-center gap-3">
@@ -54,8 +54,10 @@ export default function Navbar() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className={`transition-colors duration-300 ${
-                    isTransparent ? "text-white/90 hover:text-white hover:bg-white/10" : ""
+                  className={`transition-all duration-300 ${
+                    isTransparent 
+                      ? "!bg-white/20 hover:!bg-white/30 backdrop-blur-md border border-white/30 text-white font-semibold hero-text-shadow hover:scale-105 active:scale-95 rounded-full px-5" 
+                      : ""
                   }`}
                 >
                   Dashboard
@@ -63,17 +65,17 @@ export default function Navbar() {
               </Link>
               <span
                 className={`text-sm hidden sm:inline transition-colors duration-300 ${
-                  isTransparent ? "text-white/70" : "text-muted-foreground"
+                  isTransparent ? "text-white font-bold tracking-wide hero-text-shadow drop-shadow-md" : "text-muted-foreground font-medium"
                 }`}
               >
                 {profile.name} ({profile.role.toUpperCase()})
               </span>
               <Button
-                variant="outline"
+                variant={isTransparent ? "ghost" : "outline"}
                 size="sm"
                 onClick={handleSignOut}
-                className={`transition-colors duration-300 ${
-                  isTransparent ? "bg-transparent border-white/25 text-white hover:bg-white/10" : ""
+                className={`transition-all duration-300 ${
+                  isTransparent ? "!bg-white/20 hover:!bg-white/30 backdrop-blur-md border border-white/30 text-white font-semibold hover:scale-105 active:scale-95 hero-text-shadow rounded-full" : ""
                 }`}
               >
                 <LogOut className="h-4 w-4 mr-1" /> Sign out
@@ -85,8 +87,8 @@ export default function Navbar() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className={`transition-colors duration-300 ${
-                    isTransparent ? "text-white/90 hover:text-white hover:bg-white/10" : ""
+                  className={`transition-all duration-300 ${
+                    isTransparent ? "!bg-transparent hover:!bg-white/20 text-white font-bold tracking-wide hero-text-shadow" : "font-medium"
                   }`}
                 >
                   Login
@@ -94,10 +96,11 @@ export default function Navbar() {
               </Link>
               <Link to="/auth?mode=signup">
                 <Button
+                  variant={isTransparent ? "ghost" : "default"}
                   size="sm"
                   className={`transition-all duration-300 ${
                     isTransparent
-                      ? "glass-button border border-white/25"
+                      ? "!bg-white/20 hover:!bg-white/30 backdrop-blur-md border border-white/30 text-white font-semibold hero-text-shadow hover:scale-105 active:scale-95 rounded-full px-5"
                       : ""
                   }`}
                 >

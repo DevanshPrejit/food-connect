@@ -24,6 +24,12 @@ interface Listing {
   urgency: string;
   created_at: string;
   donor_id: string;
+  food_items?: {
+    name: string;
+    category: string;
+    veg_status: string;
+    quantity_kg: number;
+  }[];
 }
 
 interface Acceptance {
@@ -86,7 +92,7 @@ export default function NgoDashboard() {
   const fetchListings = async () => {
     const { data } = await supabase
       .from("listings")
-      .select("*")
+      .select("*, food_items(*)")
       .eq("status", "pending")
       .order("created_at", { ascending: false });
     if (data) {
@@ -356,6 +362,13 @@ function ListingCard({
         </div>
         <div className="space-y-1 text-sm text-muted-foreground">
           <p>🍽️ {listing.quantity} meals · {listing.food_type === "veg" ? "🥬 Veg" : "🍗 Non-Veg"}</p>
+          {listing.food_items && listing.food_items.length > 0 && (
+            <div className="text-xs text-muted-foreground bg-muted/30 p-2 rounded-md space-y-1">
+              {listing.food_items.map((fi, i) => (
+                <div key={i}>• {fi.quantity_kg}kg {fi.name} ({fi.veg_status === "veg" ? "🥬" : "🍗"})</div>
+              ))}
+            </div>
+          )}
           <p className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {listing.pickup_location}</p>
           <p className="flex items-center gap-1"><Clock className="h-3 w-3" /> {formatDistanceToNow(new Date(listing.created_at), { addSuffix: true })}</p>
         </div>

@@ -57,7 +57,7 @@ export default function LandingPage() {
             style={{ opacity: bgOpacity, scale: bgScale }}
           >
             <img
-              src="/kid-laughing.jpg"
+              src="/kids-eating.jpeg"
               alt=""
               className="h-full w-full object-cover"
             />

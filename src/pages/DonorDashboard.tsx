@@ -12,7 +12,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { computeUrgency } from "@/lib/urgency";
 import { reverseGeocode } from "@/lib/reverseGeocode";
-import { LocateFixed, Plus, Package, Phone } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { calculateMeals } from "@/lib/utils";
+import { LocateFixed, Plus, Package, Phone, Trash2 } from "lucide-react";
 
 interface Listing {
   id: string;
@@ -25,6 +27,12 @@ interface Listing {
   urgency: string;
   created_at: string;
   image_url: string | null;
+  food_items?: {
+    name: string;
+    category: string;
+    veg_status: string;
+    quantity_kg: number;
+  }[];
 }
 
 export default function DonorDashboard() {
@@ -36,9 +44,7 @@ export default function DonorDashboard() {
   const [impactRefreshKey, setImpactRefreshKey] = useState(0);
 
   // Form state
-  const [foodName, setFoodName] = useState("");
-  const [foodType, setFoodType] = useState<"veg" | "non-veg">("veg");
-  const [quantity, setQuantity] = useState("10");
+  const [foodItems, setFoodItems] = useState([{ name: "", category: "cooked_meal", veg_status: "veg", quantity_kg: "" }]);
   const [expiryTime, setExpiryTime] = useState("");
   const [pickupLocation, setPickupLocation] = useState("");
   const [locating, setLocating] = useState(false);
@@ -56,7 +62,7 @@ export default function DonorDashboard() {
   const fetchListings = async () => {
     const { data } = await supabase
       .from("listings")
-      .select("*")
+      .select("*, food_items(*)")
       .eq("donor_id", user!.id)
       .order("created_at", { ascending: false });
     if (data) setListings(data);
@@ -85,14 +91,19 @@ export default function DonorDashboard() {
     setSubmitting(true);
     const urgency = computeUrgency(expiryTime);
 
-    const { error } = await supabase.from("listings").insert({
-      donor_id: user!.id,
-      food_name: foodName,
-      food_type: foodType,
-      quantity: parseInt(quantity),
-      expiry_time: expiryTime,
-      pickup_location: pickupLocation,
-      urgency,
+    const meals = calculateMeals(foodItems.map(i => ({ ...i, quantity_kg: Number(i.quantity_kg) })));
+    const mainType = foodItems.some(i => i.veg_status === 'non_veg') ? 'non-veg' : 'veg';
+    const mainName = foodItems.length === 1 ? foodItems[0].name : 'Multiple Items';
+
+    const { error } = await supabase.rpc("create_listing_with_items", {
+      p_donor_id: user!.id,
+      p_food_name: mainName,
+      p_food_type: mainType,
+      p_quantity: meals,
+      p_expiry_time: expiryTime,
+      p_pickup_location: pickupLocation,
+      p_urgency: urgency,
+      p_items: foodItems.map(i => ({...i, quantity_kg: Number(i.quantity_kg)}))
     });
 
     if (error) {
@@ -100,8 +111,7 @@ export default function DonorDashboard() {
     } else {
       toast.success("Food listing created!");
       setShowForm(false);
-      setFoodName("");
-      setQuantity("10");
+      setFoodItems([{ name: "", category: "cooked_meal", veg_status: "veg", quantity_kg: "" }]);
       setExpiryTime("");
       setPickupLocation("");
       fetchListings();
@@ -199,26 +209,51 @@ export default function DonorDashboard() {
           <form onSubmit={handleSubmit} className="mb-8 rounded-2xl border bg-card p-6 shadow-sm space-y-4">
             <h2 className="text-lg font-semibold text-foreground">New Food Listing</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Food Name</Label>
-                <Input value={foodName} onChange={(e) => setFoodName(e.target.value)} required placeholder="e.g. Rice & Curry" />
-              </div>
-              <div className="space-y-2">
-                <Label>Type</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button type="button" onClick={() => setFoodType("veg")}
-                    className={`rounded-lg border-2 p-2 text-sm font-medium transition-all ${foodType === "veg" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground"}`}>
-                    🥬 Veg
-                  </button>
-                  <button type="button" onClick={() => setFoodType("non-veg")}
-                    className={`rounded-lg border-2 p-2 text-sm font-medium transition-all ${foodType === "non-veg" ? "border-destructive bg-destructive/10 text-destructive" : "border-border text-muted-foreground"}`}>
-                    🍗 Non-Veg
-                  </button>
+              <div className="space-y-4 sm:col-span-2">
+                <Label>Food Items</Label>
+                <div className="space-y-3">
+                  {foodItems.map((item, index) => (
+                    <div key={index} className="flex flex-wrap sm:flex-nowrap items-center gap-2">
+                      <Input placeholder="Item name (e.g. Biryani)" value={item.name} onChange={(e) => { const newItems = [...foodItems]; newItems[index].name = e.target.value; setFoodItems(newItems); }} required className="flex-1 min-w-[150px]" />
+                      <Select value={item.category} onValueChange={(val) => { const newItems = [...foodItems]; newItems[index].category = val; setFoodItems(newItems); }} required>
+                        <SelectTrigger className="w-[140px]"><SelectValue placeholder="Category" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="cooked_meal">Cooked Meal</SelectItem>
+                          <SelectItem value="bread_bakery">Bread/Bakery</SelectItem>
+                          <SelectItem value="snacks_starters">Snacks</SelectItem>
+                          <SelectItem value="dessert_sweets">Dessert</SelectItem>
+                          <SelectItem value="raw_produce">Raw Produce</SelectItem>
+                          <SelectItem value="dairy">Dairy</SelectItem>
+                          <SelectItem value="beverages">Beverages</SelectItem>
+                          <SelectItem value="packaged_dry">Packaged/Dry</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Select value={item.veg_status} onValueChange={(val) => { const newItems = [...foodItems]; newItems[index].veg_status = val; setFoodItems(newItems); }} required>
+                        <SelectTrigger className="w-[110px]"><SelectValue placeholder="Type" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="veg">Veg</SelectItem>
+                          <SelectItem value="non_veg">Non-Veg</SelectItem>
+                          <SelectItem value="jain">Jain</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Input type="number" min="0.1" step="0.1" placeholder="Qty (kg)" value={item.quantity_kg} onChange={(e) => { const newItems = [...foodItems]; newItems[index].quantity_kg = e.target.value; setFoodItems(newItems); }} required className="w-[90px]" />
+                      {foodItems.length > 1 && (
+                        <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => setFoodItems(foodItems.filter((_, i) => i !== index))}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Quantity (meals)</Label>
-                <Input type="number" min="1" value={quantity} onChange={(e) => setQuantity(e.target.value)} required />
+                <div className="flex items-center justify-between mt-2">
+                  <Button type="button" variant="outline" size="sm" onClick={() => setFoodItems([...foodItems, { name: "", category: "cooked_meal", veg_status: "veg", quantity_kg: "" }])} className="gap-2">
+                    <Plus className="h-4 w-4" /> Add Item
+                  </Button>
+                  <div className="text-sm font-medium text-muted-foreground flex flex-col items-end">
+                    <span>Total weight: {foodItems.reduce((acc, curr) => acc + (Number(curr.quantity_kg) || 0), 0).toFixed(1)} kg</span>
+                    <span className="text-primary font-bold">≈ {calculateMeals(foodItems.map(i => ({...i, quantity_kg: Number(i.quantity_kg)})))} meals saved</span>
+                  </div>
+                </div>
               </div>
               <div className="space-y-2">
                 <Label>Expiry Time</Label>
@@ -280,6 +315,11 @@ export default function DonorDashboard() {
                         <span className="font-semibold text-foreground">{listing.food_name}</span>
                         <span className="text-xs text-muted-foreground capitalize">({listing.food_type})</span>
                       </div>
+                      {listing.food_items && listing.food_items.length > 0 && (
+                        <div className="text-sm text-muted-foreground">
+                          {listing.food_items.map(fi => `${fi.quantity_kg}kg ${fi.name}`).join(' • ')}
+                        </div>
+                      )}
                       <div className="flex items-center gap-3 text-sm text-muted-foreground">
                         <span>{listing.quantity} meals</span>
                         <span>📍 {listing.pickup_location}</span>
