@@ -10,7 +10,7 @@ import PickupMap from "@/components/PickupMap";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Star, Search, Clock, MapPin } from "lucide-react";
+import { Star, Search, Clock, MapPin, Phone } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 interface Listing {
@@ -24,6 +24,12 @@ interface Listing {
   urgency: string;
   created_at: string;
   donor_id: string;
+  food_items?: {
+    name: string;
+    category: string;
+    veg_status: string;
+    quantity_kg: number;
+  }[];
 }
 
 interface Acceptance {
@@ -34,6 +40,12 @@ interface Acceptance {
   listings?: Listing;
 }
 
+interface DonorProfile {
+  name: string;
+  mobile_number: string;
+  location: string;
+}
+
 
 export default function NgoDashboard() {
   const { user, profile, loading } = useAuth();
@@ -42,8 +54,10 @@ export default function NgoDashboard() {
   const [acceptances, setAcceptances] = useState<Acceptance[]>([]);
   const [filter, setFilter] = useState<"all" | "urgent" | "medium" | "safe">("all");
   const [acceptedListing, setAcceptedListing] = useState<Listing | null>(null);
+  const [acceptedDonor, setAcceptedDonor] = useState<DonorProfile | null>(null);
   const [accepting, setAccepting] = useState<string | null>(null);
   const [impactRefreshKey, setImpactRefreshKey] = useState(0);
+  const [donorProfiles, setDonorProfiles] = useState<Record<string, DonorProfile>>({});
 
   useEffect(() => {
     if (!loading && (!user || profile?.role !== "ngo")) {
@@ -78,10 +92,27 @@ export default function NgoDashboard() {
   const fetchListings = async () => {
     const { data } = await supabase
       .from("listings")
-      .select("*")
+      .select("*, food_items(*)")
       .eq("status", "pending")
       .order("created_at", { ascending: false });
-    if (data) setListings(data);
+    if (data) {
+      setListings(data);
+      // Fetch donor profiles for all listings
+      const donorIds = [...new Set(data.map((l) => l.donor_id))];
+      if (donorIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("user_id, name, mobile_number, location")
+          .in("user_id", donorIds);
+        if (profiles) {
+          const profileMap: Record<string, DonorProfile> = {};
+          profiles.forEach((p: any) => {
+            profileMap[p.user_id] = { name: p.name, mobile_number: p.mobile_number, location: p.location };
+          });
+          setDonorProfiles((prev) => ({ ...prev, ...profileMap }));
+        }
+      }
+    }
   };
 
   const fetchAcceptances = async () => {
@@ -91,6 +122,26 @@ export default function NgoDashboard() {
       .eq("ngo_id", user!.id)
       .order("accepted_at", { ascending: false });
     if (data) setAcceptances(data as any);
+
+    // Fetch donor profiles for accepted listings
+    if (data && data.length > 0) {
+      const donorIds = data
+        .map((a: any) => a.listings?.donor_id)
+        .filter(Boolean);
+      if (donorIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("user_id, name, mobile_number, location")
+          .in("user_id", donorIds);
+        if (profiles) {
+          const profileMap: Record<string, DonorProfile> = {};
+          profiles.forEach((p: any) => {
+            profileMap[p.user_id] = { name: p.name, mobile_number: p.mobile_number, location: p.location };
+          });
+          setDonorProfiles((prev) => ({ ...prev, ...profileMap }));
+        }
+      }
+    }
   };
 
   const handleAccept = async (listing: Listing) => {
@@ -102,6 +153,18 @@ export default function NgoDashboard() {
       toast.success(`Accepted "${listing.food_name}"! Preparing pickup...`);
       setListings((prev) => prev.filter((l) => l.id !== listing.id));
       setAcceptedListing(listing);
+
+      // Fetch donor profile for the accepted listing
+      const { data: donorProfile } = await supabase
+        .from("profiles")
+        .select("name, mobile_number, location")
+        .eq("user_id", listing.donor_id)
+        .single();
+      if (donorProfile) {
+        setAcceptedDonor(donorProfile as DonorProfile);
+        setDonorProfiles((prev) => ({ ...prev, [listing.donor_id]: donorProfile as DonorProfile }));
+      }
+
       fetchAcceptances();
       setImpactRefreshKey((k) => k + 1);
     }
@@ -125,7 +188,7 @@ export default function NgoDashboard() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
+      <div className="container mx-auto px-4 pt-16 py-8 max-w-5xl">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-foreground">NGO Dashboard</h1>
           <p className="text-muted-foreground">Welcome, {profile?.name}</p>
@@ -141,7 +204,26 @@ export default function NgoDashboard() {
               donorLocation={acceptedListing.pickup_location}
               ngoLocation={profile?.location || "Udupi"}
             />
-            <Button variant="outline" onClick={() => setAcceptedListing(null)}>Dismiss</Button>
+            {/* Donor Contact Card */}
+            {acceptedDonor && (
+              <div className="rounded-xl border bg-card p-4 shadow-sm flex items-center gap-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary/20">
+                  <Phone className="h-5 w-5 text-secondary" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-foreground">{acceptedDonor.name}</p>
+                  <p className="text-sm text-muted-foreground">Donor Contact</p>
+                </div>
+                <a
+                  href={`tel:${acceptedDonor.mobile_number}`}
+                  className="inline-flex items-center gap-2 rounded-lg bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-secondary/90 transition-colors"
+                >
+                  <Phone className="h-4 w-4" />
+                  {acceptedDonor.mobile_number}
+                </a>
+              </div>
+            )}
+            <Button variant="outline" onClick={() => { setAcceptedListing(null); setAcceptedDonor(null); }}>Dismiss</Button>
           </div>
         )}
 
@@ -168,6 +250,7 @@ export default function NgoDashboard() {
                       listing={listing}
                       onAccept={handleAccept}
                       accepting={accepting}
+                      donorProfile={donorProfiles[listing.donor_id]}
                       recommended
                     />
                   ))}
@@ -198,6 +281,7 @@ export default function NgoDashboard() {
                     listing={listing}
                     onAccept={handleAccept}
                     accepting={accepting}
+                    donorProfile={donorProfiles[listing.donor_id]}
                   />
                 ))}
                 {filteredListings.length === 0 && (
@@ -212,19 +296,32 @@ export default function NgoDashboard() {
               <p className="text-center py-12 text-muted-foreground">No pickups yet.</p>
             ) : (
               <div className="space-y-3">
-                {acceptances.map((a) => (
-                  <div key={a.id} className="flex items-center justify-between rounded-xl border bg-card p-4 shadow-sm">
-                    <div>
-                      <p className="font-semibold text-foreground">{(a as any).listings?.food_name || "Food"}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Accepted {formatDistanceToNow(new Date(a.accepted_at), { addSuffix: true })}
-                      </p>
-                    </div>
-                    <span className="rounded-full bg-primary/20 px-2.5 py-0.5 text-xs font-medium capitalize text-primary">
-                      {a.status}
-                    </span>
-                  </div>
-                ))}
+                  {acceptances.map((a) => {
+                    const donor = donorProfiles[(a as any).listings?.donor_id];
+                    return (
+                      <div key={a.id} className="flex items-center justify-between rounded-xl border bg-card p-4 shadow-sm">
+                        <div className="flex-1">
+                          <p className="font-semibold text-foreground">{(a as any).listings?.food_name || "Food"}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Accepted {formatDistanceToNow(new Date(a.accepted_at), { addSuffix: true })}
+                          </p>
+                          {donor && (
+                            <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
+                              <Phone className="h-3 w-3" />
+                              <span>{donor.name}</span>
+                              <span>·</span>
+                              <a href={`tel:${donor.mobile_number}`} className="text-secondary hover:underline">
+                                {donor.mobile_number}
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                        <span className="rounded-full bg-primary/20 px-2.5 py-0.5 text-xs font-medium capitalize text-primary">
+                          {a.status}
+                        </span>
+                      </div>
+                    );
+                  })}
               </div>
             )}
           </TabsContent>
@@ -242,11 +339,13 @@ function ListingCard({
   listing,
   onAccept,
   accepting,
+  donorProfile,
   recommended = false,
 }: {
   listing: Listing;
   onAccept: (l: Listing) => void;
   accepting: string | null;
+  donorProfile?: DonorProfile;
   recommended?: boolean;
 }) {
   return (
@@ -263,9 +362,26 @@ function ListingCard({
         </div>
         <div className="space-y-1 text-sm text-muted-foreground">
           <p>🍽️ {listing.quantity} meals · {listing.food_type === "veg" ? "🥬 Veg" : "🍗 Non-Veg"}</p>
+          {listing.food_items && listing.food_items.length > 0 && (
+            <div className="text-xs text-muted-foreground bg-muted/30 p-2 rounded-md space-y-1">
+              {listing.food_items.map((fi, i) => (
+                <div key={i}>• {fi.quantity_kg}kg {fi.name} ({fi.veg_status === "veg" ? "🥬" : "🍗"})</div>
+              ))}
+            </div>
+          )}
           <p className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {listing.pickup_location}</p>
           <p className="flex items-center gap-1"><Clock className="h-3 w-3" /> {formatDistanceToNow(new Date(listing.created_at), { addSuffix: true })}</p>
         </div>
+        {donorProfile && donorProfile.mobile_number && (
+          <div className="flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-2 text-sm">
+            <Phone className="h-3.5 w-3.5 text-secondary" />
+            <span className="text-muted-foreground">{donorProfile.name}</span>
+            <span className="text-muted-foreground">·</span>
+            <a href={`tel:${donorProfile.mobile_number}`} className="font-medium text-secondary hover:underline">
+              {donorProfile.mobile_number}
+            </a>
+          </div>
+        )}
         <Button
           onClick={() => onAccept(listing)}
           disabled={accepting === listing.id}

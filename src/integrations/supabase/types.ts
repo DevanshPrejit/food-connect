@@ -46,6 +46,44 @@ export type Database = {
           },
         ]
       }
+      food_items: {
+        Row: {
+          category: string
+          created_at: string | null
+          id: string
+          listing_id: string | null
+          name: string
+          quantity_kg: number
+          veg_status: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          id?: string
+          listing_id?: string | null
+          name: string
+          quantity_kg: number
+          veg_status: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          id?: string
+          listing_id?: string | null
+          name?: string
+          quantity_kg?: number
+          veg_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_items_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listings: {
         Row: {
           created_at: string
@@ -93,6 +131,7 @@ export type Database = {
           created_at: string
           id: string
           location: string
+          mobile_number: string
           name: string
           role: string
           user_id: string
@@ -101,6 +140,7 @@ export type Database = {
           created_at?: string
           id?: string
           location?: string
+          mobile_number?: string
           name?: string
           role: string
           user_id: string
@@ -109,6 +149,7 @@ export type Database = {
           created_at?: string
           id?: string
           location?: string
+          mobile_number?: string
           name?: string
           role?: string
           user_id?: string
@@ -121,6 +162,19 @@ export type Database = {
     }
     Functions: {
       accept_listing: { Args: { p_listing_id: string }; Returns: undefined }
+      create_listing_with_items: {
+        Args: {
+          p_donor_id: string
+          p_food_name: string
+          p_food_type: string
+          p_quantity: number
+          p_expiry_time: string
+          p_pickup_location: string
+          p_urgency: string
+          p_items: Json
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
