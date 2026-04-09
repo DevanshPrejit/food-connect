@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Leaf, Phone } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
 
 export default function AuthPage() {
   const [searchParams] = useSearchParams();
@@ -21,6 +22,13 @@ export default function AuthPage() {
   const [role, setRole] = useState<"donor" | "ngo">(initialRole);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { user, profile, loading: authLoading } = useAuth();
+
+  useEffect(() => {
+    if (authLoading || !user) return;
+    if (profile?.role === "donor") navigate("/donor");
+    else if (profile?.role === "ngo") navigate("/ngo");
+  }, [authLoading, user, profile, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,10 +67,14 @@ export default function AuthPage() {
         if (error) throw error;
         
         toast.success("Welcome back!");
-        // Let auth context handle profile loading and routing
       }
     } catch (err: any) {
-      toast.error(err.message);
+      const message = typeof err?.message === "string" ? err.message : "Login failed. Please try again.";
+      if (message.toLowerCase().includes("invalid login credentials")) {
+        toast.error("Invalid email or password.");
+      } else {
+        toast.error(message);
+      }
     } finally {
       setLoading(false);
     }
