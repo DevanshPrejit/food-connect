@@ -32,6 +32,7 @@ export default function DonorDashboard() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [impactRefreshKey, setImpactRefreshKey] = useState(0);
 
   // Form state
   const [foodName, setFoodName] = useState("");
@@ -69,6 +70,7 @@ export default function DonorDashboard() {
           setListings((prev) => prev.map((l) => (l.id === payload.new.id ? { ...l, ...payload.new } : l)));
           if (payload.new.status === "accepted") {
             toast.info("🎉 An NGO has accepted your donation!");
+            setImpactRefreshKey((k) => k + 1);
           }
         }
       )
@@ -229,7 +231,7 @@ export default function DonorDashboard() {
                 <p className="text-sm text-muted-foreground">Completed Donations</p>
               </div>
             </div>
-            <ImpactStats />
+            <ImpactStats refreshKey={impactRefreshKey} />
           </TabsContent>
         </Tabs>
       </div>
