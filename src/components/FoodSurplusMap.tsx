@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from "react-leaflet";
 import { supabase } from "@/integrations/supabase/client";
 import { geocode } from "@/lib/geocode";
@@ -33,26 +33,41 @@ function RecenterMap({ center }: { center: [number, number] }) {
 export default function FoodSurplusMap() {
   const [markers, setMarkers] = useState<MarkerData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAndGeocode = async () => {
-      const { data } = await supabase
+      setError(null);
+      setLoading(true);
+
+      const { data, error: supabaseError } = await supabase
         .from("listings")
         .select("id, food_name, quantity, urgency, pickup_location")
         .eq("status", "pending");
+
+      if (supabaseError) {
+        setError("Unable to load listings right now. Please refresh.");
+        setLoading(false);
+        return;
+      }
+
       if (!data || data.length === 0) {
         setMarkers([]);
         setLoading(false);
         return;
       }
-      const results: MarkerData[] = [];
-      for (const l of data) {
-        const coords = await geocode(l.pickup_location);
-        if (coords) results.push({ ...l, coords });
-      }
-      setMarkers(results);
+
+      const geocodeResults = await Promise.all(
+        data.map(async (listing) => {
+          const coords = await geocode(listing.pickup_location);
+          return coords ? { ...listing, coords } : null;
+        })
+      );
+
+      setMarkers(geocodeResults.filter((item): item is MarkerData => item !== null));
       setLoading(false);
     };
+
     fetchAndGeocode();
   }, []);
 
@@ -104,7 +119,13 @@ export default function FoodSurplusMap() {
           </CircleMarker>
         ))}
       </MapContainer>
-      {!loading && markers.length === 0 && (
+      {loading && (
+        <p className="text-center text-xs text-muted-foreground py-3">Loading surplus food locations…</p>
+      )}
+      {!loading && error && (
+        <p className="text-center text-xs text-red-600 py-3">{error}</p>
+      )}
+      {!loading && !error && markers.length === 0 && (
         <p className="text-center text-xs text-muted-foreground py-3">No surplus food right now</p>
       )}
     </div>

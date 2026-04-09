@@ -5,7 +5,7 @@ export async function geocode(location: string): Promise<[number, number] | null
   try {
     const res = await fetch(
       `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}&limit=1`,
-      { headers: { "User-Agent": "ZeroWasteConnect/1.0" } }
+      { headers: { Accept: "application/json" } }
     );
     const data = await res.json();
     if (data && data.length > 0) {
