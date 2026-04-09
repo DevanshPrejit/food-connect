@@ -11,7 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { computeUrgency } from "@/lib/urgency";
-import { Plus, Package } from "lucide-react";
+import { reverseGeocode } from "@/lib/reverseGeocode";
+import { LocateFixed, Plus, Package } from "lucide-react";
 
 interface Listing {
   id: string;
@@ -39,6 +40,7 @@ export default function DonorDashboard() {
   const [quantity, setQuantity] = useState("10");
   const [expiryTime, setExpiryTime] = useState("");
   const [pickupLocation, setPickupLocation] = useState("");
+  const [locating, setLocating] = useState(false);
 
   useEffect(() => {
     if (!loading && (!user || profile?.role !== "donor")) {
@@ -105,6 +107,50 @@ export default function DonorDashboard() {
     setSubmitting(false);
   };
 
+  const handleUseCurrentLocation = async () => {
+    if (locating || submitting) return;
+
+    if (!("geolocation" in navigator) || !navigator.geolocation) {
+      toast.error("Geolocation is not supported in this browser.");
+      return;
+    }
+
+    setLocating(true);
+
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10_000,
+          maximumAge: 30_000,
+        });
+      });
+
+      const { latitude, longitude } = position.coords;
+      const address = await reverseGeocode(latitude, longitude);
+
+      if (address) {
+        setPickupLocation(address);
+        toast.success("Pickup location updated.");
+      } else {
+        toast.error("Couldn't determine your address. Please type it in.");
+      }
+    } catch (err) {
+      const e = err as GeolocationPositionError;
+      const message =
+        e?.code === e.PERMISSION_DENIED
+          ? "Location permission denied. Please allow access and try again."
+          : e?.code === e.POSITION_UNAVAILABLE
+            ? "Your location is currently unavailable. Please try again."
+            : e?.code === e.TIMEOUT
+              ? "Location request timed out. Please try again."
+              : "Couldn't fetch your location. Please try again.";
+      toast.error(message);
+    } finally {
+      setLocating(false);
+    }
+  };
+
   const statusBadge = (status: string) => {
     const colors: Record<string, string> = {
       pending: "bg-muted text-muted-foreground",
@@ -169,7 +215,27 @@ export default function DonorDashboard() {
               </div>
               <div className="space-y-2 sm:col-span-2">
                 <Label>Pickup Location</Label>
-                <Input value={pickupLocation} onChange={(e) => setPickupLocation(e.target.value)} required placeholder="e.g. 123 Main Street, Mumbai" />
+                <div className="relative">
+                  <Input
+                    value={pickupLocation}
+                    onChange={(e) => setPickupLocation(e.target.value)}
+                    required
+                    placeholder="e.g. 123 Main Street, Mumbai"
+                    className="pr-12"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1/2 -translate-y-1/2"
+                    onClick={handleUseCurrentLocation}
+                    disabled={locating || submitting}
+                    aria-label="Use current location"
+                    title="Use current location"
+                  >
+                    <LocateFixed className={locating ? "h-4 w-4 animate-pulse" : "h-4 w-4"} />
+                  </Button>
+                </div>
               </div>
             </div>
             {expiryTime && (
@@ -209,7 +275,7 @@ export default function DonorDashboard() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <UrgencyBadge urgency={listing.urgency as any} />
+                      <UrgencyBadge urgency={listing.urgency as "urgent" | "medium" | "safe"} />
                       {statusBadge(listing.status)}
                     </div>
                   </div>
