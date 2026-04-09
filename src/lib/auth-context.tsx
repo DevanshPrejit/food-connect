@@ -8,6 +8,7 @@ interface Profile {
   name: string;
   role: "donor" | "ngo";
   location: string;
+  mobile_number: string;
 }
 
 interface AuthContextType {

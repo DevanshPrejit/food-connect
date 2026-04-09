@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { calculateMeals } from "@/lib/utils";
 import AnimatedCounter from "./AnimatedCounter";
 import { Utensils, Leaf, HandHeart } from "lucide-react";
 
@@ -12,10 +13,15 @@ export default function ImpactStats({ refreshKey = 0 }: ImpactStatsProps) {
 
   useEffect(() => {
     const fetchStats = async () => {
-      const { data: listings } = await supabase.from("listings").select("quantity, status");
+      const { data: listings } = await supabase.from("listings").select("quantity, status, food_items(category, quantity_kg)");
       if (listings) {
         const savedListings = listings.filter((l) => l.status === "accepted" || l.status === "picked_up");
-        const totalMeals = savedListings.reduce((sum, l) => sum + l.quantity, 0);
+        const totalMeals = savedListings.reduce((sum, l) => {
+          if (l.food_items && l.food_items.length > 0) {
+            return sum + calculateMeals(l.food_items as any);
+          }
+          return sum + l.quantity;
+        }, 0);
         const active = listings.filter((l) => l.status === "pending").length;
         setStats({ meals: totalMeals, active, co2: Math.round(totalMeals * 2.5) });
       }

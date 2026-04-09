@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from "react-leaflet";
 import { supabase } from "@/integrations/supabase/client";
 import { geocode } from "@/lib/geocode";
+import { calculateMeals } from "@/lib/utils";
 import "leaflet/dist/leaflet.css";
 
 interface MapListing {
@@ -10,6 +11,7 @@ interface MapListing {
   quantity: number;
   urgency: string;
   pickup_location: string;
+  food_items: { category: string; quantity_kg: number }[];
 }
 
 interface MarkerData extends MapListing {
@@ -42,7 +44,7 @@ export default function FoodSurplusMap() {
 
       const { data, error: supabaseError } = await supabase
         .from("listings")
-        .select("id, food_name, quantity, urgency, pickup_location")
+        .select("id, food_name, quantity, urgency, pickup_location, food_items(category, quantity_kg)")
         .eq("status", "pending");
 
       if (supabaseError) {
@@ -60,7 +62,10 @@ export default function FoodSurplusMap() {
       const geocodeResults = await Promise.all(
         data.map(async (listing) => {
           const coords = await geocode(listing.pickup_location);
-          return coords ? { ...listing, coords } : null;
+          const totalQuantity = listing.food_items && listing.food_items.length > 0 
+            ? calculateMeals(listing.food_items as any) 
+            : listing.quantity;
+          return coords ? { ...listing, quantity: totalQuantity, coords } : null;
         })
       );
 
