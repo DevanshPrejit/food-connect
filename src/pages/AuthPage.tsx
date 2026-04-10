@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Leaf, Phone } from "lucide-react";
-import { useAuth } from "@/lib/auth-context";
 
 export default function AuthPage() {
   const [searchParams] = useSearchParams();
@@ -22,13 +21,6 @@ export default function AuthPage() {
   const [role, setRole] = useState<"donor" | "ngo">(initialRole);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { user, profile, loading: authLoading } = useAuth();
-
-  useEffect(() => {
-    if (authLoading || !user) return;
-    if (profile?.role === "donor") navigate("/donor");
-    else if (profile?.role === "ngo") navigate("/ngo");
-  }, [authLoading, user, profile, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,15 +58,19 @@ export default function AuthPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         
-        toast.success("Welcome back!");
+        // Fetch profile to redirect
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("user_id", user.id)
+            .single();
+          navigate(profile?.role === "ngo" ? "/ngo" : "/donor");
+        }
       }
     } catch (err: any) {
-      const message = typeof err?.message === "string" ? err.message : "Login failed. Please try again.";
-      if (message.toLowerCase().includes("invalid login credentials")) {
-        toast.error("Invalid email or password.");
-      } else {
-        toast.error(message);
-      }
+      toast.error(err.message);
     } finally {
       setLoading(false);
     }
