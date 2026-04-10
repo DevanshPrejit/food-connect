@@ -30,18 +30,16 @@ export default function Navbar() {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        isTransparent
+      className={`fixed top-0 left-0 right-0 z-[9999] transition-all duration-500 ${isTransparent
           ? "bg-transparent border-b border-transparent"
           : "bg-card/80 backdrop-blur-md border-b shadow-sm"
-      }`}
+        }`}
     >
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link
           to="/"
-          className={`flex items-center gap-2 text-2xl sm:text-3xl font-extrabold tracking-tight transition-colors duration-300 ${
-            isTransparent ? "text-white hero-text-shadow drop-shadow-md" : "text-primary"
-          }`}
+          className={`flex items-center gap-2 text-2xl sm:text-3xl font-extrabold tracking-tight transition-colors duration-300 ${isTransparent ? "text-white hero-text-shadow drop-shadow-md" : "text-primary"
+            }`}
         >
           <Leaf className="h-7 w-7 sm:h-8 sm:w-8" />
           ResQMeal
@@ -54,19 +52,17 @@ export default function Navbar() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className={`transition-all duration-300 ${
-                    isTransparent 
-                      ? "!bg-white/20 hover:!bg-white/30 backdrop-blur-md border border-white/30 text-white font-semibold hero-text-shadow hover:scale-105 active:scale-95 rounded-full px-5" 
+                  className={`transition-all duration-300 ${isTransparent
+                      ? "!bg-white/20 hover:!bg-white/30 backdrop-blur-md border border-white/30 text-white font-semibold hero-text-shadow hover:scale-105 active:scale-95 rounded-full px-5"
                       : ""
-                  }`}
+                    }`}
                 >
                   Dashboard
                 </Button>
               </Link>
               <span
-                className={`text-sm hidden sm:inline transition-colors duration-300 ${
-                  isTransparent ? "text-white font-bold tracking-wide hero-text-shadow drop-shadow-md" : "text-muted-foreground font-medium"
-                }`}
+                className={`text-sm hidden sm:inline transition-colors duration-300 ${isTransparent ? "text-white font-bold tracking-wide hero-text-shadow drop-shadow-md" : "text-muted-foreground font-medium"
+                  }`}
               >
                 {profile.name} ({profile.role.toUpperCase()})
               </span>
@@ -74,9 +70,8 @@ export default function Navbar() {
                 variant={isTransparent ? "ghost" : "outline"}
                 size="sm"
                 onClick={handleSignOut}
-                className={`transition-all duration-300 ${
-                  isTransparent ? "!bg-white/20 hover:!bg-white/30 backdrop-blur-md border border-white/30 text-white font-semibold hover:scale-105 active:scale-95 hero-text-shadow rounded-full" : ""
-                }`}
+                className={`transition-all duration-300 ${isTransparent ? "!bg-white/20 hover:!bg-white/30 backdrop-blur-md border border-white/30 text-white font-semibold hover:scale-105 active:scale-95 hero-text-shadow rounded-full" : ""
+                  }`}
               >
                 <LogOut className="h-4 w-4 mr-1" /> Sign out
               </Button>
@@ -85,11 +80,10 @@ export default function Navbar() {
             <>
               <Link to="/auth">
                 <Button
-                  variant="ghost"
+                  variant={isTransparent ? "ghost" : "default"}
                   size="sm"
-                  className={`transition-all duration-300 ${
-                    isTransparent ? "!bg-transparent hover:!bg-white/20 text-white font-bold tracking-wide hero-text-shadow" : "font-medium"
-                  }`}
+                  className={`transition-all duration-300 ${isTransparent ? "!bg-white/20 hover:!bg-white/30 hover:text-amber-50 backdrop-blur-md border border-white/30 text-white font-semibold hero-text-shadow hover:scale-105 active:scale-95 rounded-full px-5" : ""
+                    }`}
                 >
                   Login
                 </Button>
@@ -98,11 +92,10 @@ export default function Navbar() {
                 <Button
                   variant={isTransparent ? "ghost" : "default"}
                   size="sm"
-                  className={`transition-all duration-300 ${
-                    isTransparent
-                      ? "!bg-white/20 hover:!bg-white/30 backdrop-blur-md border border-white/30 text-white font-semibold hero-text-shadow hover:scale-105 active:scale-95 rounded-full px-5"
+                  className={`transition-all duration-300 ${isTransparent
+                      ? "!bg-white/20 hover:!bg-white/30 hover:text-amber-50 backdrop-blur-md border border-white/30 text-white font-semibold hero-text-shadow hover:scale-105 active:scale-95 rounded-full px-5"
                       : ""
-                  }`}
+                    }`}
                 >
                   Sign Up
                 </Button>

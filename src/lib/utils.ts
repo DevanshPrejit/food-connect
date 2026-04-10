@@ -22,3 +22,21 @@ export function calculateMeals(items: { category: string; quantity_kg: number }[
     return total + Math.round(item.quantity_kg * factor);
   }, 0);
 }
+
+export const CO2_FACTOR: Record<string, number> = {
+  cooked_meal:      3.5, 
+  bread_bakery:     1.5, 
+  snacks_starters:  2.0, 
+  dessert_sweets:   3.0, 
+  raw_produce:      1.0, 
+  dairy:            4.0, 
+  beverages:        1.2, 
+  packaged_dry:     1.8, 
+};
+
+export function calculateCO2(items: { category: string; quantity_kg: number }[]): number {
+  return items.reduce((total, item) => {
+    const factor = CO2_FACTOR[item.category] ?? 2.5;
+    return total + (item.quantity_kg * factor);
+  }, 0);
+}
