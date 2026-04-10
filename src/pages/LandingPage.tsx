@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { motion, useScroll, useTransform } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import AnimatedCounter from "@/components/AnimatedCounter";
-import { Button } from "@/components/ui/button";
 import { ArrowRight, Leaf, Heart, Users, Truck } from "lucide-react";
 
 const steps = [
@@ -26,29 +25,35 @@ export default function LandingPage() {
     offset: ["start start", "end start"],
   });
 
-  // Background fades out as user scrolls through the 200vh hero buffer
-  const bgOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
-  const bgScale = useTransform(scrollYProgress, [0, 0.6], [1, 1.15]);
-  const overlayOpacity = useTransform(scrollYProgress, [0.4, 0.8], [0, 1]);
+  // Background fades out as user scrolls through the hero buffer
+  const bgOpacity = useTransform(scrollYProgress, [0, 0.78], [1, 0]);
+  const bgScale = useTransform(scrollYProgress, [0, 0.78], [1, 1.12]);
+  const overlayOpacity = useTransform(scrollYProgress, [0.45, 0.95], [0, 1]);
 
-  // Text animates on scroll
-  const textY = useTransform(scrollYProgress, [0, 0.5], [0, -120]);
-  const textOpacity = useTransform(scrollYProgress, [0.3, 0.6], [1, 0]);
-  const textScale = useTransform(scrollYProgress, [0, 0.5], [1, 0.85]);
+  // Text animates on scroll - move it UP significantly to avoid the cards
+  const textY = useTransform(scrollYProgress, [0.1, 0.4], [0, -280]);
+  const textOpacity = useTransform(scrollYProgress, [0.2, 0.6], [1, 0]);
+  const textScale = useTransform(scrollYProgress, [0, 0.5], [1, 0.88]);
 
   // CTA buttons
-  const ctaOpacity = useTransform(scrollYProgress, [0.2, 0.45], [1, 0]);
-  const ctaY = useTransform(scrollYProgress, [0, 0.4], [0, -60]);
+  const ctaOpacity = useTransform(scrollYProgress, [0.14, 0.4], [1, 0]);
+  const ctaY = useTransform(scrollYProgress, [0, 0.34], [0, -80]);
 
   // Scroll indicator
   const scrollIndicatorOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
+
+  // India snapshot cards animate earlier in the hero scroll space
+  const foodWasteCardOpacity = useTransform(scrollYProgress, [0.2, 0.32, 0.78, 0.92], [0, 1, 1, 0]);
+  const foodWasteCardX = useTransform(scrollYProgress, [0.2, 0.32], [-80, 0]);
+  const hungerCardOpacity = useTransform(scrollYProgress, [0.34, 0.48, 0.84, 0.96], [0, 1, 1, 0]);
+  const hungerCardX = useTransform(scrollYProgress, [0.34, 0.48], [80, 0]);
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
 
       {/* ===== IMMERSIVE HERO ===== */}
-      <section ref={heroRef} className="relative h-[200vh]">
+      <section ref={heroRef} className="relative h-[320vh]">
         {/* Fixed viewport container */}
         <div className="sticky top-0 h-screen w-full overflow-hidden">
           {/* Background image */}
@@ -79,7 +84,7 @@ export default function LandingPage() {
             {/* Large cinematic typography */}
             <h1 className="hero-text-shadow font-bold tracking-tight text-white leading-[0.9] select-none">
               <span className="block text-[clamp(2.5rem,10vw,8rem)]">Share.</span>
-              <span className="block text-[clamp(2.5rem,10vw,8rem)] mt-1 text-primary drop-shadow-lg">Nourish.</span>
+              <span className="block text-[clamp(2.5rem,10vw,8rem)] mt-1 text-green-600 drop-shadow-lg">Nourish.</span>
               <span className="block text-[clamp(2.5rem,10vw,8rem)] mt-1">Sustain.</span>
             </h1>
 
@@ -93,32 +98,72 @@ export default function LandingPage() {
               style={{ opacity: ctaOpacity, y: ctaY }}
             >
               <Link to="/auth?mode=signup&role=donor">
-                <button className="glass-button rounded-full px-10 py-4 text-lg font-semibold tracking-wide flex items-center gap-2 hover:scale-105 active:scale-95 transition-transform">
+                <button className="glass-button rounded-full px-10 py-4 text-lg font-semibold tracking-wide flex items-center gap-2 hover:scale-105 hover:text-green-500 active:scale-95 transition-transform">
                   Donate <ArrowRight className="h-5 w-5" />
                 </button>
               </Link>
               <Link to="/auth?mode=signup&role=ngo">
-                <button className="glass-button rounded-full px-10 py-4 text-lg font-semibold tracking-wide flex items-center gap-2 hover:scale-105 active:scale-95 transition-transform">
+                <button className="glass-button rounded-full px-10 py-4 text-lg font-semibold tracking-wide flex items-center gap-2 hover:scale-105 hover:text-green-500 active:scale-95 transition-transform">
                   Request <ArrowRight className="h-5 w-5" />
                 </button>
               </Link>
             </motion.div>
           </motion.div>
 
-          {/* Scroll indicator */}
-          <motion.div
-            className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/60"
-            style={{ opacity: scrollIndicatorOpacity }}
-          >
-            <span className="text-xs uppercase tracking-widest">Scroll</span>
-            <div className="h-10 w-[1px] bg-white/30 relative overflow-hidden">
+          {/* Cards shown in the hero scroll buffer — brought 'down' and gaps reduced */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 px-4 pb-2 sm:px-6 sm:pb-4">
+            <div className="mx-auto w-full max-w-6xl space-y-6 sm:space-y-8">
               <motion.div
-                className="absolute top-0 left-0 w-full bg-white"
-                animate={{ height: ["0%", "100%", "0%"], top: ["0%", "0%", "100%"] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-              />
+                style={{ opacity: foodWasteCardOpacity, x: foodWasteCardX }}
+                className="ml-0 mr-auto w-full max-w-[min(92vw,36rem)] overflow-hidden rounded-2xl border border-white/35 bg-background/85 shadow-2xl backdrop-blur-md sm:max-w-[min(92vw,44rem)]"
+              >
+                <div className="flex min-h-[10rem] sm:min-h-[12rem]">
+                  <div className="relative w-[40%] shrink-0">
+                    <img
+                      src="/food_waste.jpg"
+                      alt="Food waste and surplus"
+                      className="absolute inset-0 h-full w-full object-cover"
+                    />
+                  </div>
+                  <div className="flex w-[60%] flex-col justify-center gap-2 px-4 py-4 sm:gap-3 sm:px-6 sm:py-3">
+                    <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-primary sm:text-xs">
+                      Food wastage in India
+                    </p>
+                    <p className="text-sm leading-snug text-muted-foreground sm:text-base sm:leading-relaxed">
+                      India wastes nearly{" "}
+                      <span className="text-lg font-extrabold tabular-nums text-foreground sm:text-2xl">68 million tonnes</span>{" "}
+                      of food every year — resources lost while surplus could feed millions.
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+
+              <motion.div
+                style={{ opacity: hungerCardOpacity, x: hungerCardX }}
+                className="ml-auto mr-0 w-full max-w-[min(92vw,36rem)] overflow-hidden rounded-2xl border border-white/35 bg-background/85 shadow-2xl backdrop-blur-md sm:max-w-[min(92vw,44rem)]"
+              >
+                <div className="flex min-h-[10rem] sm:min-h-[12rem]">
+                  <div className="relative w-[40%] shrink-0">
+                    <img
+                      src="/hunger.jpg"
+                      alt="Hunger and food insecurity"
+                      className="absolute inset-0 h-full w-full object-cover"
+                    />
+                  </div>
+                  <div className="flex w-[60%] flex-col justify-center gap-2 px-4 py-4 sm:gap-3 sm:px-6 sm:py-3">
+                    <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-primary sm:text-xs">
+                      Hunger in India
+                    </p>
+                    <p className="text-sm leading-snug text-muted-foreground sm:text-base sm:leading-relaxed">
+                      Around{" "}
+                      <span className="text-lg font-extrabold tabular-nums text-foreground sm:text-2xl">194 million people</span>{" "}
+                      remain undernourished — bridging surplus to need matters now.
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
 

@@ -60,10 +60,12 @@ export default function NgoDashboard() {
   const [donorProfiles, setDonorProfiles] = useState<Record<string, DonorProfile>>({});
 
   useEffect(() => {
-    if (!loading && (!user || profile?.role !== "ngo")) {
+    if (!loading && user && profile?.role === "ngo") {
+      // User is authenticated and has correct role - stay on dashboard
+    } else if (!loading && (!user || profile?.role !== "ngo")) {
       navigate("/auth");
     }
-  }, [user, profile, loading]);
+  }, [user, profile, loading, navigate]);
 
   useEffect(() => {
     if (user) {
@@ -183,7 +185,7 @@ export default function NgoDashboard() {
     })
     .slice(0, 3);
 
-  if (loading) return null;
+  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
 
   return (
     <div className="min-h-screen bg-background">
@@ -200,30 +202,64 @@ export default function NgoDashboard() {
             <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
               <MapPin className="h-5 w-5 text-secondary" /> Pickup Tracking
             </h2>
-            <PickupMap
-              donorLocation={acceptedListing.pickup_location}
-              ngoLocation={profile?.location || "Udupi"}
-            />
-            {/* Donor Contact Card */}
-            {acceptedDonor && (
-              <div className="rounded-xl border bg-card p-4 shadow-sm flex items-center gap-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary/20">
-                  <Phone className="h-5 w-5 text-secondary" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-4">
+                {/* Donor Contact Card */}
+                {acceptedDonor && (
+                  <div className="rounded-xl border bg-card p-4 shadow-sm flex flex-col sm:flex-row items-center gap-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary/20">
+                      <Phone className="h-5 w-5 text-secondary" />
+                    </div>
+                    <div className="flex-1 text-center sm:text-left">
+                      <p className="font-semibold text-foreground">{acceptedDonor.name}</p>
+                      <p className="text-sm text-muted-foreground">Donor Contact</p>
+                    </div>
+                    <a
+                      href={`tel:${acceptedDonor.mobile_number}`}
+                      className="inline-flex items-center gap-2 rounded-lg bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-secondary/90 transition-colors w-full sm:w-auto justify-center"
+                    >
+                      <Phone className="h-4 w-4" />
+                      {acceptedDonor.mobile_number}
+                    </a>
+                  </div>
+                )}
+                
+                {/* Listing Details */}
+                <div className="rounded-xl border bg-card p-4 shadow-sm space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Food Details</p>
+                      <h3 className="font-semibold text-foreground text-lg">{acceptedListing.food_name}</h3>
+                    </div>
+                    <UrgencyBadge urgency={acceptedListing.urgency as any} />
+                  </div>
+                  <div className="space-y-2 text-sm text-muted-foreground">
+                    <p className="flex items-center gap-1.5">🍽️ <span className="font-medium text-foreground">{acceptedListing.quantity}</span> meals · {acceptedListing.food_type === "veg" ? "🥬 Veg" : "🍗 Non-Veg"}</p>
+                    {acceptedListing.food_items && acceptedListing.food_items.length > 0 && (
+                      <div className="text-xs text-muted-foreground bg-muted/30 p-3 rounded-md space-y-1.5 mt-2">
+                        {acceptedListing.food_items.map((fi, i) => (
+                          <div key={i} className="flex justify-between border-b border-border/50 pb-1 last:border-0 last:pb-0">
+                            <span>{fi.name} {fi.veg_status === "veg" ? "🥬" : "🍗"}</span>
+                            <span className="font-medium">{fi.quantity_kg} kg</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <p className="flex items-center gap-1.5 pt-1"><Clock className="h-3.5 w-3.5" /> Listed {formatDistanceToNow(new Date(acceptedListing.created_at), { addSuffix: true })}</p>
+                    <p className="flex items-center gap-1.5 text-secondary font-medium"><MapPin className="h-3.5 w-3.5" /> {acceptedListing.pickup_location}</p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="font-semibold text-foreground">{acceptedDonor.name}</p>
-                  <p className="text-sm text-muted-foreground">Donor Contact</p>
-                </div>
-                <a
-                  href={`tel:${acceptedDonor.mobile_number}`}
-                  className="inline-flex items-center gap-2 rounded-lg bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-secondary/90 transition-colors"
-                >
-                  <Phone className="h-4 w-4" />
-                  {acceptedDonor.mobile_number}
-                </a>
               </div>
-            )}
-            <Button variant="outline" onClick={() => { setAcceptedListing(null); setAcceptedDonor(null); }}>Dismiss</Button>
+              <div className="h-[300px] md:h-full min-h-[300px] rounded-xl overflow-hidden border shadow-sm">
+                <PickupMap
+                  donorLocation={acceptedListing.pickup_location}
+                  ngoLocation={profile?.location || "Udupi"}
+                />
+              </div>
+            </div>
+            <div className="flex justify-end pt-2">
+              <Button variant="outline" onClick={() => { setAcceptedListing(null); setAcceptedDonor(null); }}>Dismiss Tracking</Button>
+            </div>
           </div>
         )}
 
@@ -327,7 +363,7 @@ export default function NgoDashboard() {
           </TabsContent>
 
           <TabsContent value="impact">
-            <ImpactStats refreshKey={impactRefreshKey} />
+            <ImpactStats refreshKey={impactRefreshKey} userId={user?.id} role="ngo" />
           </TabsContent>
         </Tabs>
       </div>
