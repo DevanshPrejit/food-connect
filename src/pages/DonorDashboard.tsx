@@ -348,7 +348,7 @@ export default function DonorDashboard() {
                 <p className="text-sm text-muted-foreground">Completed Donations</p>
               </div>
             </div>
-            <ImpactStats refreshKey={impactRefreshKey} />
+            <ImpactStats refreshKey={impactRefreshKey} userId={user?.id} role="donor" />
           </TabsContent>
         </Tabs>
       </div>
