@@ -6,11 +6,19 @@ import { Utensils, Leaf, HandHeart } from "lucide-react";
 
 interface ImpactStatsProps {
   refreshKey?: number;
+  hideMealsSaved?: boolean;
+  hideActiveDonations?: boolean;
   userId?: string;
   role?: "donor" | "ngo";
 }
 
-export default function ImpactStats({ refreshKey = 0, userId, role }: ImpactStatsProps) {
+export default function ImpactStats({
+  refreshKey = 0,
+  hideMealsSaved = false,
+  hideActiveDonations = false,
+  userId,
+  role,
+}: ImpactStatsProps) {
   const [stats, setStats] = useState({ meals: 0, active: 0, co2: 0 });
 
   useEffect(() => {
@@ -68,14 +76,30 @@ export default function ImpactStats({ refreshKey = 0, userId, role }: ImpactStat
     fetchStats();
   }, [refreshKey, userId, role]);
 
-  const items = [
-    { icon: Utensils, label: role === "ngo" ? "Meals Rescued" : "Meals Donated", value: stats.meals, suffix: "" },
-    { icon: HandHeart, label: role === "ngo" ? "Active Pickups" : "Active Donations", value: stats.active, suffix: "" },
-    { icon: Leaf, label: "CO₂ Saved (kg)", value: stats.co2, suffix: " kg" },
-  ];
+  const items = [];
+
+  if (!hideMealsSaved) {
+    items.push({
+      icon: Utensils,
+      label: role === "ngo" ? "Meals Rescued" : "Meals Donated",
+      value: stats.meals,
+      suffix: "",
+    });
+  }
+
+  if (!hideActiveDonations) {
+    items.push({
+      icon: HandHeart,
+      label: role === "ngo" ? "Active Pickups" : "Active Donations",
+      value: stats.active,
+      suffix: "",
+    });
+  }
+
+  items.push({ icon: Leaf, label: "CO₂ Saved (kg)", value: stats.co2, suffix: " kg" });
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div className={`grid grid-cols-1 sm:grid-cols-${items.length} gap-4`}>
       {items.map((item) => (
         <div key={item.label} className="flex flex-col items-center gap-2 rounded-xl border bg-card p-6 shadow-sm">
           <item.icon className="h-8 w-8 text-primary" />

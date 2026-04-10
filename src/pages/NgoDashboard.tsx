@@ -363,7 +363,7 @@ export default function NgoDashboard() {
           </TabsContent>
 
           <TabsContent value="impact">
-            <ImpactStats refreshKey={impactRefreshKey} userId={user?.id} role="ngo" />
+            <ImpactStats refreshKey={impactRefreshKey} userId={user?.id} role="ngo" hideActiveDonations />
           </TabsContent>
         </Tabs>
       </div>

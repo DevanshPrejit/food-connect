@@ -82,7 +82,7 @@ export default function AuthPage() {
         <div className="flex flex-col items-center gap-2 text-center">
           <Leaf className="h-10 w-10 text-primary" />
           <h1 className="text-2xl font-bold text-foreground">
-            {mode === "login" ? "Welcome back" : "Join ZeroWaste Connect"}
+            {mode === "login" ? "Welcome back" : "Join ResQMeal"}
           </h1>
           <p className="text-sm text-muted-foreground">
             {mode === "login" ? "Sign in to your account" : "Create your account to get started"}

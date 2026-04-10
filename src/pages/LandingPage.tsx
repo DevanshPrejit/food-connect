@@ -212,9 +212,9 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
           <div className="flex items-center justify-center gap-2 mb-2">
             <Leaf className="h-4 w-4 text-primary" />
-            <span className="font-semibold text-foreground">ZeroWaste Connect</span>
+            <span className="font-semibold text-foreground">ResQMeal</span>
           </div>
-          © 2026 ZeroWaste Connect. Reducing food waste, one meal at a time.
+          © 2026 ResQMeal. Reducing food waste, one meal at a time.
         </div>
       </footer>
     </div>
