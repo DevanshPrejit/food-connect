@@ -30,23 +30,20 @@ function RecenterMap({ center }: { center: [number, number] }) {
   return null;
 }
 
-export default function FoodSurplusMap() {
+export default function FoodSurplusMap({ listings }: { listings: MapListing[] }) {
   const [markers, setMarkers] = useState<MarkerData[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchAndGeocode = async () => {
-      const { data } = await supabase
-        .from("listings")
-        .select("id, food_name, quantity, urgency, pickup_location")
-        .eq("status", "pending");
-      if (!data || data.length === 0) {
+      // Use the provided listings prop instead of fetching from the DB
+      if (!listings || listings.length === 0) {
         setMarkers([]);
         setLoading(false);
         return;
       }
       const results: MarkerData[] = [];
-      for (const l of data) {
+      for (const l of listings) {
         const coords = await geocode(l.pickup_location);
         if (coords) results.push({ ...l, coords });
       }
@@ -54,7 +51,7 @@ export default function FoodSurplusMap() {
       setLoading(false);
     };
     fetchAndGeocode();
-  }, []);
+  }, [listings]);
 
   const center: [number, number] = markers.length > 0
     ? [
