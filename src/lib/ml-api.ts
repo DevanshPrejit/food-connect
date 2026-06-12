@@ -6,7 +6,7 @@
  * VITE_ML_SERVICE_URL to the deployed FastAPI URL.
  */
 
-const ML_BASE = import.meta.env.VITE_ML_SERVICE_URL ?? "/api";
+const ML_API = import.meta.env.VITE_ML_API_URL || "https://food-connect-1snn.onrender.com"
 
 // ── Types ──────────────────────────────────────────
 
@@ -57,7 +57,7 @@ export async function checkMLHealth(): Promise<{
   model: string;
 } | null> {
   try {
-    const res = await fetch(`${ML_BASE}/health`, {
+    const res = await fetch(`${ML_API}/health`, {
       signal: AbortSignal.timeout(10000),
     });
     if (!res.ok) return null;
@@ -80,7 +80,7 @@ export async function scoreNGOs(
     ngo_list: ngoList,
   };
 
-  const res = await fetch(`${ML_BASE}/score`, {
+  const res = await fetch(`${ML_API}/score`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -105,7 +105,7 @@ export async function dispatchDonation(
     ngo_list: ngoList,
   };
 
-  const res = await fetch(`${ML_BASE}/dispatch`, {
+  const res = await fetch(`${ML_API}/dispatch`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
