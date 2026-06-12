@@ -13,6 +13,9 @@ export default function AnimatedCounter({ end, duration = 2000, prefix = "", suf
   const started = useRef(false);
 
   useEffect(() => {
+    // Reset starting state when the target value updates, so async data triggers the animation
+    started.current = false;
+    
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && !started.current) {

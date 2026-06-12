@@ -43,11 +43,97 @@ interface Props {
 export default function PickupMap({ donorLocation, ngoLocation }: Props) {
   const [donorPos, setDonorPos] = useState<[number, number] | null>(null);
   const [ngoPos, setNgoPos] = useState<[number, number] | null>(null);
+  const [route, setRoute] = useState<[number, number][] | null>(null);
+  const [routeLoading, setRouteLoading] = useState(true);
+  const [routeError, setRouteError] = useState<string | null>(null);
+  const [geocodeError, setGeocodeError] = useState<string | null>(null);
 
   useEffect(() => {
-    geocode(donorLocation).then(setDonorPos);
-    geocode(ngoLocation).then(setNgoPos);
+    setDonorPos(null);
+    setNgoPos(null);
+    setRoute(null);
+    setRouteLoading(true);
+    setRouteError(null);
+    setGeocodeError(null);
+
+    let active = true;
+
+    async function resolvePositions() {
+      try {
+        const [donorResult, ngoResult] = await Promise.all([
+          geocode(donorLocation),
+          geocode(ngoLocation),
+        ]);
+
+        if (!active) return;
+
+        if (!donorResult || !ngoResult) {
+          setGeocodeError("Unable to resolve donor or NGO location. Please check the addresses.");
+          setRouteLoading(false);
+          return;
+        }
+
+        setDonorPos(donorResult);
+        setNgoPos(ngoResult);
+      } catch (error) {
+        if (!active) return;
+        setGeocodeError("Geocoding failed. Please try again later.");
+        setRouteLoading(false);
+      }
+    }
+
+    resolvePositions();
+
+    return () => {
+      active = false;
+    };
   }, [donorLocation, ngoLocation]);
+
+  useEffect(() => {
+    if (!donorPos || !ngoPos) {
+      return;
+    }
+
+    setRouteLoading(true);
+    setRouteError(null);
+
+    const controller = new AbortController();
+    const [donorLat, donorLng] = donorPos;
+    const [ngoLat, ngoLng] = ngoPos;
+    const url = `https://router.project-osrm.org/route/v1/driving/${donorLng},${donorLat};${ngoLng},${ngoLat}?overview=full&geometries=geojson`;
+
+    fetch(url, { signal: controller.signal })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.code === "Ok" && data.routes?.[0]?.geometry?.coordinates?.length) {
+          setRoute(
+            data.routes[0].geometry.coordinates.map(
+              ([lng, lat]: [number, number]) => [lat, lng] as [number, number]
+            )
+          );
+          setRouteError(null);
+        } else {
+          throw new Error("Routing data unavailable");
+        }
+      })
+      .catch((error) => {
+        if ((error as any).name !== "AbortError") {
+          setRoute([donorPos, ngoPos]);
+          setRouteError("Unable to load route; showing straight-line path.");
+        }
+      })
+      .finally(() => setRouteLoading(false));
+
+    return () => controller.abort();
+  }, [donorPos, ngoPos]);
+
+  if (geocodeError) {
+    return (
+      <div className="rounded-xl border bg-card p-8 text-center text-sm text-red-600">
+        {geocodeError}
+      </div>
+    );
+  }
 
   if (!donorPos || !ngoPos) {
     return (
@@ -71,15 +157,23 @@ export default function PickupMap({ donorLocation, ngoLocation }: Props) {
         />
         <Marker position={donorPos} icon={donorIcon} />
         <Marker position={ngoPos} icon={ngoIcon} />
-        <Polyline positions={[donorPos, ngoPos]} color="hsl(142, 72%, 29%)" dashArray="8" />
-        <FitBounds positions={[donorPos, ngoPos]} />
+        {route && (
+          <Polyline
+            positions={route}
+            color="hsl(142, 72%, 29%)"
+            dashArray={routeError ? "8" : undefined}
+          />
+        )}
+        <FitBounds positions={route ?? [donorPos, ngoPos]} />
       </MapContainer>
       <div className="flex items-center justify-between bg-card p-3 text-sm">
         <span className="flex items-center gap-2">
           <span className="h-3 w-3 rounded-full bg-primary" /> Donor
           <span className="h-3 w-3 rounded-full bg-secondary ml-3" /> NGO
         </span>
-        <span className="font-medium text-muted-foreground">📍 Pickup route</span>
+        <span className="font-medium text-muted-foreground">
+          {routeLoading ? "Routing pickup path…" : routeError ? "Straight-line fallback route" : "📍 Pickup route"}
+        </span>
       </div>
     </div>
   );
