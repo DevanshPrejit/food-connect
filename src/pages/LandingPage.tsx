@@ -62,7 +62,7 @@ export default function LandingPage() {
             style={{ opacity: bgOpacity, scale: bgScale }}
           >
             <img
-              src="/kids-eating.jpeg"
+              src={`${import.meta.env.BASE_URL}kids-eating.jpeg`}
               alt=""
               className="h-full w-full object-cover"
             />
@@ -120,7 +120,7 @@ export default function LandingPage() {
                 <div className="flex min-h-[10rem] sm:min-h-[12rem]">
                   <div className="relative w-[40%] shrink-0">
                     <img
-                      src="/food_waste.jpg"
+                      src={`${import.meta.env.BASE_URL}food_waste.jpg`}
                       alt="Food waste and surplus"
                       className="absolute inset-0 h-full w-full object-cover"
                     />
@@ -145,7 +145,7 @@ export default function LandingPage() {
                 <div className="flex min-h-[10rem] sm:min-h-[12rem]">
                   <div className="relative w-[40%] shrink-0">
                     <img
-                      src="/hunger.jpg"
+                      src={`${import.meta.env.BASE_URL}hunger.jpg`}
                       alt="Hunger and food insecurity"
                       className="absolute inset-0 h-full w-full object-cover"
                     />
