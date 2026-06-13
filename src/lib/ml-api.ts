@@ -6,7 +6,7 @@
  * VITE_ML_SERVICE_URL to the deployed FastAPI URL.
  */
 
-const ML_API = import.meta.env.VITE_ML_API_URL || "https://food-connect-1snn.onrender.com"
+const ML_API = import.meta.env.VITE_ML_API_URL || "https://food-connect-1snn.onrender.com/api"
 
 // ── Types ──────────────────────────────────────────
 
