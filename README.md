@@ -231,7 +231,7 @@ This project is licensed under the MIT License.
 
 ## Acknowledgements
 
-- [Delhivery](https://www.delhivery.com/) for the logistics dataset used to train the ML model
+- [Delhivery](https://www.kaggle.com/datasets/santanukundu/delhivery-dataset) for the logistics dataset in Kaggle by Santanu Kundu used to train the ML model
 - [OpenStreetMap Nominatim](https://nominatim.org/) for free geocoding
 - [Supabase](https://supabase.com/) for the backend infrastructure
 - All the NGOs working tirelessly to fight hunger
